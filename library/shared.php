@@ -8,6 +8,20 @@
 namespace Library;
 trait Shared
 {
+	private function getRequest(String $url, String $token):String {
+		$response = '';
+
+		$context = stream_context_create([
+			'http' => [
+				'method' => 'GET',
+				'header' => "Authorization: Bearer $token"
+			]
+		]);
+
+		$response = file_get_contents($url, false, $context);
+
+		return $response;
+	}
 
 	private function request(String $url, Array $params = []):string {
 		$response = '';
@@ -21,7 +35,9 @@ trait Shared
 				'method' => 'POST',
 				'header' => "Content-Type: application/x-www-form-urlencoded\r\ncontent-Length: "
 					. strlen( $data ) . "\r\n",
-				'content' => $data
+				'content' => $data,
+				'ignore_errors' => true,
+				// 'request_fulluri' => true
 			]
 
 		] );
