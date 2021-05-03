@@ -18,5 +18,11 @@ $methods = [
         'default' => ''
       ]
     ]
-  ]
+  ],
+  'refresh' => [
+    'params' => []
+  ],
+  'me' => [
+    'params' => []
+  ],
 ];

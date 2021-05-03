@@ -60,12 +60,9 @@ class Main
 
 	public function teamsauth()
 	{
-		$tenant = $this->getVar('TENANT', 'e');
-		$client = $this->getVar('CLIENT', 'e');
-		$scope = $this->getVar('SCOPE', 'e');
+		$url = $this->teams->authUrl();
 
-		$url = "https://login.microsoftonline.com/$tenant/oauth2/v2.0/authorize/?client_id=$client&scope=$scope&response_type=code";
-
+		// printme($url);
 		header("Location: $url");
 	}
 
@@ -76,49 +73,37 @@ class Main
 			throw new Exception($error, 6);
 		}
 
-		$tenant = $this->getVar('TENANT', 'e');
-		$client = $this->getVar('CLIENT', 'e');
-		$scope = $this->getVar('SCOPE', 'e');
-		$secret = $this-> getVar('SECRET', 'e');
+		$this->teams->setup($code);
 
-		$data = [
-			'client_id' => $client,
-			'scope' => $scope,
-			'grant_type' => 'authorization_code',
-			'client_secret' => $secret,
-			'redirect_uri' => 'https://academic.pnit.od.ua/teams/setup',
-			'code' => $code
-		];
+		header("Location: /teams/me");
 
-		$url = "login.microsoftonline.com/$tenant/oauth2/v2.0/token";
-		// $responce = $this->request($url, $data);
-		// $result = json_decode($responce, true);
+		return null;
+	}
 
-		// return [$this->db->createTable('Credentials', [
-		// 	'id' => [
-		// 		'type' => 'int',
-		// 		'attributes' => ['unsigned'],
-		// 		'autoincrement' => true,
-		// 		'key' => 'primary'
-		// 	],
-		// 	'title' => [
-		// 		'type' => 'varchar(20)'
-		// 	],
-		// 	'token' => [
-		// 		'type' => 'text',
-		// 	],
-		// 	'refresh' => [
-		// 		'type' => 'text'
-		// 	]
-		// ])];
+	public function teamsrefresh()
+	{
+		$this->teams->refresh();
+	}
 
-		// return [$this->db->select(['credentials' => []])->result];
-
-		return [true];
+	public function teamsme()
+	{
+		return $this->teams->me();
 	}
 
 	public function statsget():?array {
-		return ['hello world'];
+		$class = "7ec53ea3-ace8-4d02-8bea-cd024a149c2a";
+		$assignment = "5d0884c6-00b6-4c96-919a-f2aa2b9442b5";
+		$submission = "5ecca75a-4f8d-b094-2f7b-990106d4e2ab";
+
+		$className = $this->teams->team($class)['displayName'];
+		$assignmentTitle = $this->teams->assignment($class, $assignment)['displayName'];
+		$points = $this->teams->points($class, $assignment, $submission);
+
+		return [
+			'discipline' => $className,
+			'assignment' => $assignmentTitle,
+			'grade' => $points
+		];
 	}
 
 	public function __construct() {
@@ -130,5 +115,7 @@ class Main
 			) );
 		$this->setDB($this->db);
 		// $this -> TG = new Services\Telegram(key: $this->getVar('TGKey', 'e'), emergency: 280751679);
+
+		$this->teams = new Services\Teams();
 	}
 }
