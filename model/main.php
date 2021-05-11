@@ -58,36 +58,9 @@ class Main
 		return $result;
 	}
 
-	public function teamsauth()
-	{
-		$url = $this->teams->authUrl();
-
-		// printme($url);
-		header("Location: $url");
-	}
-
-	public function teamssetup(String $code, String $error):?array {
-		$result = [];
-
-		if ($error) {
-			throw new Exception($error, 6);
-		}
-
-		$this->teams->setup($code);
-
-		header("Location: /teams/me");
-
-		return null;
-	}
-
 	public function teamsrefresh()
 	{
 		$this->teams->refresh();
-	}
-
-	public function teamsme()
-	{
-		return $this->teams->me();
 	}
 
 	public function statsget():?array {
