@@ -27,30 +27,38 @@ class Teams
     return $result;
   }
 
-  public function team(String $guid):?array
-  {
+  public function getTeam(String $guid):?array {
     $result = null;
     $result = $this->get("classes/$guid");
     return $result;
   }
 
-  public function assignment(String $team, String $guid):?array
-  {
+  public function listTeams() {
+    $result = null;
+    $result = $this->get("classes/");
+    return $result;
+  }
+
+  public function getAssignment(String $team, String $guid):?array {
     $result = null;
     $result = $this->get("classes/$team/assignments/$guid");
     return $result;
   }
 
-  public function submission(String $team, String $assignment, String $guid)
-  {
+  public function listAssignments(String $team) {
+    $result = null;
+    $result = $this->get("classes/$team/assignment");
+    return $result;
+  }
+
+  public function getSubmission(String $team, String $assignment, String $guid) {
     $result = null;
     $result = $this->get("classes/$team/assignments/$assignment/submissions/$guid");
     // TODO: grab date of submission
     return $result;
   }
 
-  public function points(String $team, String $assignment, String $submission)
-  {
+  public function getPoints(String $team, String $assignment, String $submission) {
     $result = null;
     $outcome = $this->get("classes/$team/assignments/$assignment/submissions/$submission/outcomes")['value'];
     foreach ($outcome as $rubric) {
@@ -62,8 +70,7 @@ class Teams
     return $result;
   }
 
-  public function refresh():void
-  {
+  public function refresh():void {
     $url = "login.microsoftonline.com/". $this->tenant ."/oauth2/v2.0/token";
     $data = array(
       'client_id' => $this->client,
@@ -75,8 +82,8 @@ class Teams
     $response = $this->request($url, $data);
     $result = json_decode($response, true);
 
-    $credentials = $this->db->select(['Credentials' => []])
-									->where(['Credentials' => ['title' => 'sync']])->one();
+    $credentials = $this->getToken();
+    
 		if ($credentials) {
 			$this->db->update('Credentials', [
 				'token' => $result['access_token'], 
@@ -89,6 +96,18 @@ class Teams
 			]])->run();
 		}
   }
+
+  private function getToken() {
+    $result = null;
+
+    $query = $this->db->select(['Credentials' => []])->where(['Credentials' => ['title' => 'sync']])->one();
+    if (isset($query['token'])) {
+      $result = $query['token'];
+    }
+
+    return $result;
+  }
+
   public function __construct() {
     $this->db = $this->getDB();
 
@@ -98,10 +117,10 @@ class Teams
 		$this->secret = $this->getVar('SECRET', 'e');
     $this->baseUrl = 'https://graph.microsoft.com/beta/education/';
     
-    $credentials = $this->db->select(['Credentials' => []])->where(['Credentials' => ['title' => 'sync']])->one();
+    $credentials = $this->getToken();
 
     if ($credentials) {
-      $this->bearer = $credentials['token'];
+      $this->bearer = $credentials;
     }
     else {
       throw new Exception("Unauthorized", 3);
