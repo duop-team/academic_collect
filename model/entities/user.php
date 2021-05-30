@@ -1,57 +1,62 @@
 <?php
-/**
- * User entity
- *
- * @author Serhii Shkrabak
- * @global object $CORE->model
- * @package Model\Entities
- */
+/** 
+* MS Teams user entity
+* @author Oleg Zakirov
+* @package Model\Entities\User
+*/
 namespace Model\Entities;
 
 class User
 {
-	use \Library\Shared;
-	use \Library\Entity;
-	use \Library\Uniroad;
+  use \Library\Shared;
+  use \Library\Entity;
 
-	public static function search(?Int $chat = 0, ?String $guid = '', Int $limit = 0):self|array|null {
-		$result = [];
-		foreach (['chat', 'guid'] as $var)
-			if ($$var)
-				$filters[$var] = $$var;
-		$db = self::getDB();
-		$users = $db -> select(['Users' => []]);
-		if(!empty($filters))
-			$users->where(['Users' => $filters]);
-		foreach ($users->many($limit) as $user) {
-				$class = __CLASS__;
-				$result[] = new $class($user['id'], $chat, $user['guid'], $user['message'], $user['service'], $user['input']);
-		}
-		return $limit == 1 ? (isset($result[0]) ? $result[0] : null) : $result;
-	}
+  
+  public static function search(String $guid = '', String $teams_guid = '', Int $id = 0, Int $limit = 1):self
+  {
+    $result = [];
+    $db = self::getDB();
+    $filters = [];
+    
+    $users = $db -> select(['Users' => []]);
 
-	public function save():self {
-		$db = $this->db;
-		if (!$this->id) {
-			$this->id = $db -> insert([
-				'Users' => [ 'chat' => $this->chat ]
-			])->run(true)->storage['inserted'];
-		}
-		if ($this->_changed)
-			$db -> update('Users', $this->_changed )
-				-> where(['Users'=> ['id' => $this->id]])
-				-> run();
-		return $this;
-	}
+    foreach (['id', 'guid', 'teams_guid'] as $filter) {
+      if ($$filter) {
+        $filters[$filter] = $$filter;
+      }
+    }
 
-	public function __construct(public Int $id = 0, public ?Int $chat = null, public ?String $guid = null, public ?Int $message = null, public ?Int $service = null, public String|Array|Null $input = '') {
-		$this->db = $this->getDB();
-		$this->input = $this->input ? json_decode($this->input, true) : [];
-		if (!$guid) {
-			$response = $this->uni()->get('accounts', ['type'=>'user'], 'account/create')->one();
-			if (property_exists($response, 'guid')) {
-				$this->set(['guid' => $response->guid]);
-			}
-		}
-	}
+    if (!empty($filters)) {
+      $users -> where(['Users' => $filters]);
+    }
+    
+    foreach ($users->many($limit) as $user) {
+      $class = __CLASS__;
+      $result[] = new $class($user['guid'], $user['teams_guid'], id: $user['id']);
+    }
+
+    return $limit == 1 ? (isset($result[0]) ? $result[0] : null) : $result;
+  }
+
+  public function save():self {
+    $db = $this->db;
+
+    if (!$this->id) {
+      $this->id = $db->insert([
+        'Users' => ['guid' => $this->guid, 'teams_guid' => $this->teams_guid]
+        ])->run(true)->storage['inserted'];
+    }
+
+    if ($this->_changed) {
+      $db -> update('Users', $this->_changed)
+          -> where(['Users' => ['id' => $this->id]])
+          -> run();
+    }
+
+    return $this;
+  }
+
+  public function __construct(public String $teams_guid, public ?String $guid = '', public Int $id = 0) {
+    $this->db = $this->getDB();
+  }
 }
