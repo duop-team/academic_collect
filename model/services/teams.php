@@ -19,9 +19,17 @@ class Teams
   private String $secret;
   private String $baseUrl;
 
-  private function get(String $path):?array {
+  private function get(String $path, Array $params = []):?array {
     $result = null;
-    $response = $this->getRequest($this->baseUrl . $path, $this->bearer);
+    $request = $this->baseUrl . $path;
+    $query = null;
+
+    if (!empty($params)) {
+      $query = http_build_query($params);
+      $request .= '?' . $query;
+    }
+
+    $response = $this->getRequest($request, $this->bearer);
     $result = json_decode($response, true);
 
     return $result;
@@ -47,7 +55,7 @@ class Teams
 
   public function listAssignments(String $team) {
     $result = null;
-    $result = $this->get("classes/$team/assignment");
+    $result = $this->get("classes/$team/assignments")['value'];
     return $result;
   }
 
@@ -58,15 +66,54 @@ class Teams
     return $result;
   }
 
+  public function getSubmissionId(String $team, String $assignment, String $student) {
+    $result = null;
+
+    $query = [
+      "\$select" => "id",
+      "\$filter" => "submittedBy/user/id eq '$student'"
+    ];
+
+    $request = "classes/$team/assignments/$assignment/submissions";
+    
+    $response = $this->get($request, $query)['value'];
+    if (!empty($response)) {
+      $result = $response[0]['id'];
+    }
+
+    return $result;
+  }
+
   public function getPoints(String $team, String $assignment, String $submission) {
     $result = null;
-    $outcome = $this->get("classes/$team/assignments/$assignment/submissions/$submission/outcomes")['value'];
-    foreach ($outcome as $rubric) {
-      if (isset($rubric['publishedPoints'])) {
-        $result = $rubric['publishedPoints']['points'];
-        break;
+    $query = [
+      '\$select' => 'publishedPoints/points'
+    ];
+    $outcome = $this->get("classes/$team/assignments/$assignment/submissions/$submission/outcomes", $query)['value'];
+
+    if (!empty($outcome)) {
+      foreach ($outcome as $rubric) {
+        if (isset($rubric['publishedPoints'])) {
+          $result = $rubric['publishedPoints']['points'];
+          break;
+        }
       }
     }
+
+    return $result;
+  }
+
+  public function getStudentName(String $guid) {
+    $result = null;
+
+    $result = $this->get("users/$guid")['displayName'];
+    return $result;
+  }
+
+  public function getDisciplineName(String $guid) {
+    $result = null;
+
+    $result = $this->get("classes/$guid")['displayName'];
     return $result;
   }
 
@@ -83,7 +130,7 @@ class Teams
     $result = json_decode($response, true);
 
     $credentials = $this->getToken();
-    
+
 		if ($credentials) {
 			$this->db->update('Credentials', [
 				'token' => $result['access_token'], 
