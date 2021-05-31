@@ -14,7 +14,9 @@ trait Shared
 		$context = stream_context_create([
 			'http' => [
 				'method' => 'GET',
-				'header' => "Authorization: Bearer $token"
+				'header' => "Authorization: Bearer $token",
+				'ignore_errors' => true,
+				// 'request_fulluri' => true
 			]
 		]);
 
