@@ -41,9 +41,25 @@ class Teams
     return $result;
   }
 
-  public function listTeams() {
+  public function listTeams(?String $student = null) {
     $result = null;
-    $result = $this->get("classes/");
+    $request = null;
+    $query = [
+      "\$select" => "id"
+    ];
+
+    if ($student) {
+      $request = "users/$student/classes";
+    } else {
+      $request = "classes";
+    }
+
+    $response = $this->get($request, $query);
+
+    if (isset($response['value'])) {
+      $result = $response['value'];
+    }
+
     return $result;
   }
 
@@ -55,30 +71,37 @@ class Teams
 
   public function listAssignments(String $team) {
     $result = null;
-    $result = $this->get("classes/$team/assignments")['value'];
+
+    $query = [
+      "\$select" => "id"
+    ];
+
+    $request = "classes/$team/assignments";
+    $result = $this->get($request, $query)['value'];
+
+    if (isset($response['value'])) {
+      $result = $response['value'];
+    }
     return $result;
   }
 
-  public function getSubmission(String $team, String $assignment, String $guid) {
-    $result = null;
-    $result = $this->get("classes/$team/assignments/$assignment/submissions/$guid");
-    // TODO: grab date of submission
-    return $result;
-  }
-
-  public function getSubmissionId(String $team, String $assignment, String $student) {
+  public function getSubmission(String $team, String $assignment, String $student) {
     $result = null;
 
     $query = [
-      "\$select" => "id",
+      "\$select" => "id,submittedDateTime",
       "\$filter" => "submittedBy/user/id eq '$student'"
     ];
 
     $request = "classes/$team/assignments/$assignment/submissions";
-    
-    $response = $this->get($request, $query)['value'];
-    if (!empty($response)) {
-      $result = $response[0]['id'];
+    $response = $this->get($request, $query);
+
+    if (isset($response['value'])) {
+      $value = $response['value'];
+
+      if (!empty($value)) {
+        $result = $value[0];
+      }
     }
 
     return $result;
