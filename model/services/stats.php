@@ -70,6 +70,17 @@ class Stats {
   public function get(String $student, String $discipline):?array {
 		$total = null;
     $user = \Model\Entities\User::search(teams_guid: $student);
+
+    // Якщо юзера у базі немає - тоді підтягнути дані з тімса
+    if (!$user) {
+      $user = new \Model\Entities\User($student);
+      $user->save();
+
+      $this->cache($student);
+
+      $user = \Model\Entities\User::search(teams_guid: $student);
+    }
+
 		$team = \Model\Entities\Team::search(guid: $discipline);
 		$result = \Model\Entities\Result::search(student: $user->id, discipline_team: $team->id);
 		foreach ($result as $res) {
