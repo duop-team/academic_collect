@@ -58,25 +58,21 @@ class Main
 		return $result;
 	}
 
-	public function teamsrefresh()
-	{
+	public function teamsrefresh():void {
 		$this->teams->refresh();
 	}
 
-	public function statsget():?array {
-		$class = "7ec53ea3-ace8-4d02-8bea-cd024a149c2a";
-		$assignment = "5d0884c6-00b6-4c96-919a-f2aa2b9442b5";
-		$submission = "5ecca75a-4f8d-b094-2f7b-990106d4e2ab";
+	public function statsget(String $student, String $discipline):?array {
+		return $this->stats->get($student, $discipline);
+	}
 
-		$className = $this->teams->team($class)['displayName'];
-		$assignmentTitle = $this->teams->assignment($class, $assignment)['displayName'];
-		$points = $this->teams->points($class, $assignment, $submission);
+	public function statsinsert(String $student, String $discipline, String $assignment, Int $points) {
+		return $this->stats->insert($student, $discipline, $assignment, $points);
+	}
 
-		return [
-			'discipline' => $className,
-			'assignment' => $assignmentTitle,
-			'grade' => $points
-		];
+	public function statscache(String $student):void
+	{
+		$this->stats->cache($student);
 	}
 
 	public function __construct() {
@@ -88,7 +84,7 @@ class Main
 			) );
 		$this->setDB($this->db);
 		// $this -> TG = new Services\Telegram(key: $this->getVar('TGKey', 'e'), emergency: 280751679);
-
 		$this->teams = new Services\Teams();
+		$this->stats = new Services\Stats();
 	}
 }
