@@ -87,9 +87,11 @@ class Stats {
 			$total += $res->points; 
 		}
 		return [
+      'student' => $this->teams->getStudentName($user->teams_guid),
+      'discipline' => $this->teams->getDisciplineName($discipline),
+			'points' => $total,
 			'student_guid' => $user->teams_guid,
-			'discipline_guid' => $discipline,
-			'points' => $total
+			'discipline_guid' => $discipline
 		];
 	}
 
