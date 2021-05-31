@@ -11,8 +11,10 @@ class User
   use \Library\Shared;
   use \Library\Entity;
 
-  
-  public static function search(String $guid = '', String $teams_guid = '', Int $id = 0, Int $limit = 1):self
+  /**
+  * Пошук користувача 
+  */
+  public static function search(String $guid = '', String $teams_guid = '', Int $id = 0, Int $limit = 1):self|null
   {
     $result = [];
     $db = self::getDB();
@@ -32,7 +34,7 @@ class User
     
     foreach ($users->many($limit) as $user) {
       $class = __CLASS__;
-      $result[] = new $class($user['guid'], $user['teams_guid'], id: $user['id']);
+      $result[] = new $class($user['teams_guid'], $user['guid'], id: $user['id']);
     }
 
     return $limit == 1 ? (isset($result[0]) ? $result[0] : null) : $result;

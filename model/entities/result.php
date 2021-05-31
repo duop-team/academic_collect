@@ -10,7 +10,7 @@ class Result {
   use \Library\Shared;
 	use \Library\Entity;
 
-  public static function search(Int $student = 0, Int $discipline_team = 0, Int $assignment = 0, Int $points = 0, String $submittedDate = '', Int $module = 0, Int $semester = 0,  Int $id = 0, Int $limit = 1):self
+  public static function search(Int $student = 0, Int $discipline_team = 0, Int $assignment = 0, Int $points = 0, String $submittedDate = '', Int $module = 0, Int $semester = 0,  Int $id = 0, Int $limit = 0):self|array|null
   {
     $result = [];
     $db = self::getDB();
@@ -60,7 +60,7 @@ class Result {
     return $this;
   }
 
-  public function __construct(public Int $student, public Int $discipline_team, public Int $assignment, public Int $points, public String $submittedDate, public Int $module = 0, public Int $semester = 0, public Int $id = 0) {
+  public function __construct(public Int $student, public Int $discipline_team, public Int $assignment, public Int $points, public String $submittedDate = '', public Int $module = 0, public Int $semester = 0, public Int $id = 0) {
     $this->db = $this->getDB();
   }
 }

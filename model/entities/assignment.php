@@ -11,7 +11,7 @@ class Assignment
   use \Library\Shared;
   use \Library\Entity;
 
-  public static function search(String $guid = '', Int $id = 0, Int $limit = 1):self
+  public static function search(String $guid = '', Int $team = 0, Int $id = 0, Int $limit = 1):self|null
   {
     $result = [];
     $db = self::getDB();
@@ -19,7 +19,7 @@ class Assignment
     
     $assignments = $db -> select(['Assignments' => []]);
 
-    foreach (['id', 'guid'] as $filter) {
+    foreach (['id', 'guid', 'team'] as $filter) {
       if ($$filter) {
         $filters[$filter] = $$filter;
       }
@@ -31,7 +31,7 @@ class Assignment
     
     foreach ($assignments->many($limit) as $assignment) {
       $class = __CLASS__;
-      $result[] = new $class($assignment['guid'], id: $assignment['id']);
+      $result[] = new $class($assignment['guid'], $assignment['team'], id: $assignment['id']);
     }
 
     return $limit == 1 ? (isset($result[0]) ? $result[0] : null) : $result;
@@ -42,7 +42,7 @@ class Assignment
 
     if (!$this->id) {
       $this->id = $db->insert([
-        'Assignments' => ['guid' => $this->guid]
+        'Assignments' => ['guid' => $this->guid, 'team' => $this->team]
       ])->run(true)->storage['inserted'];
     }
 
@@ -55,7 +55,7 @@ class Assignment
     return $this;
   }
 
-  public function __construct(public String $guid, public Int $id = 0) {
+  public function __construct(public String $guid, public Int $team, public Int $id = 0) {
     $this->db = $this->getDB();
   }
 }

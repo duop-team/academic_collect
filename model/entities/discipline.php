@@ -11,7 +11,7 @@ class Discipline
   use \Library\Shared;
 	use \Library\Entity;
 
-  public static function search(String $guid = '', Int $id = 0, Int $limit = 1):self
+  public static function search(String $guid = '', Int $id = 0, Int $limit = 1):self|null
   {
     $result = [];
     $db = self::getDB();
